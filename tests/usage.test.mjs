@@ -26,7 +26,7 @@ test('external link must be https', () => {
 });
 
 test('malformed usage doc is rejected', () => {
-  for (const bad of [null, 'x', {}, doc({ branches: 'no' }), doc({ sha: 1 }), doc({ first_use: null }),
+  for (const bad of [null, 'x', {}, doc({ branches: 'no' }), doc({ sha: 1 }),
     doc({ branches: [{ id: 'b', label: 'B', steps: [{ text: 'x', snippets: [{ kind: 'weird', code: 'c', path: 'a', line: 1 }] }] }] })]) {
     assert.equal(isUsageDoc(bad), false);
   }
@@ -44,4 +44,33 @@ test('snippet link', () => {
   assert.equal(snippetLink({ full_name: 'o/r', sha: 'abc1234' }, { kind: 'command', code: 'x', url: 'https://d.example/p' }), 'https://d.example/p');
   assert.equal(snippetLink({ full_name: 'o/r', sha: 'abc1234' }, { kind: 'command', code: 'x', url: 'http://d.example/p' }), null);
   assert.equal(snippetLink({ full_name: 'bad name', sha: 'abc1234' }, snip), null);
+});
+
+test('first_use is optional, branches may be empty', () => {
+  const d = doc(); delete d.first_use;
+  assert.equal(isUsageDoc(d), true);
+  assert.equal(isUsageDoc(doc({ first_use: null })), true);
+  assert.equal(isUsageDoc(doc({ branches: [] })), true);
+  assert.equal(isUsageDoc(doc({ first_use: { goal: 1, steps: [] } })), false);
+});
+
+test('chmod 777 is flagged', () => {
+  for (const c of ['chmod 777 x', 'chmod -R 777 d', 'chmod 0777 x']) assert.equal(dangerNotes(c).length, 1, c);
+  assert.deepEqual(dangerNotes('chmod 755 x'), []);
+});
+
+test('rm needs both recursive and force', () => {
+  for (const c of ['rm -rf x', 'rm -fr x', 'rm -Rf x', 'rm -r -f x', 'cd d && rm -rf']) assert.equal(dangerNotes(c).length, 1, c);
+  for (const c of ['rm -r build', 'rm -f a.txt', 'rm a.txt']) assert.deepEqual(dangerNotes(c), [], c);
+});
+
+test('pipe-to-shell variants', () => {
+  for (const c of ['cat x | sh', 'echo y | bash', 'echo y | zsh', 'sh -c "$(curl -fsSL https://x)"',
+    'bash -c "$(wget -qO- https://x)"', 'bash <(curl -s https://x)', 'curl -sL https://x \\\n  | bash']) {
+    assert.equal(dangerNotes(c).length, 1, c);
+  }
+  const n = dangerNotes('curl https://x | sudo -E bash');
+  assert.equal(n.length, 2);
+  assert.ok(n.some((x) => x.includes('會直接執行')));
+  assert.deepEqual(dangerNotes('sha256sum f | shasum'), []);
 });

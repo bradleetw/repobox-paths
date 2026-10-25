@@ -197,11 +197,14 @@ function renderUsage(doc) {
       b.steps.forEach((s, i) => ol.append(stepNode(doc, s, i, labels)));
       grid.append(el('section', { class: 'branch', 'data-branch': b.id }, el('h2', { text: b.label }), ol));
     }
-    kids.push(grid, el('div', { class: 'merge', 'aria-hidden': 'true', text: '↓ 裝好之後' }));
+    kids.push(grid);
   }
-  const ol = el('ol', { class: 'usteps' });
-  doc.first_use.steps.forEach((s, i) => ol.append(stepNode(doc, s, i, labels)));
-  kids.push(el('section', { class: 'firstuse' }, el('h2', { text: doc.first_use.goal }), ol));
+  if (doc.first_use) {
+    if (doc.branches.length) kids.push(el('div', { class: 'merge', 'aria-hidden': 'true', text: '↓ 裝好之後' }));
+    const ol = el('ol', { class: 'usteps' });
+    doc.first_use.steps.forEach((s, i) => ol.append(stepNode(doc, s, i, labels)));
+    kids.push(el('section', { class: 'firstuse' }, el('h2', { text: doc.first_use.goal }), ol));
+  }
   panel.replaceChildren(...kids);
 }
 
