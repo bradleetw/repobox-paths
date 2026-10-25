@@ -1,5 +1,6 @@
 import { ghRaw, ghRepoStatus, loadCfg, STEM_RE } from './lib/gh.mjs';
 import { pageState } from './lib/paths.mjs';
+import { indexFlags } from './lib/usage.mjs';
 import { $, el, showSetup, showMessage } from './ui.js';
 
 const root = $('root');
@@ -8,10 +9,15 @@ function renderList(items) {
   const ul = el('ul', { class: 'cards' });
   for (const it of items) {
     if (!it || !STEM_RE.test(String(it.stem))) continue;
+    const f = indexFlags(it);
+    const tags = el('div', { class: 'tags' });
+    if (f.paths > 0) tags.append(el('span', { class: 'pill', text: `請求路徑 ${f.paths} 條` }));
+    if (f.usage) tags.append(el('span', { class: 'pill', text: '使用流程' }));
     const a = el('a', { class: 'card', href: `view.html#${it.stem}` },
       el('div', { class: 'name', text: String(it.full_name) }),
       el('div', { class: 'tag', text: String(it.tagline || '') }),
-      el('div', { class: 'muted', text: `${it.entries} 個入口 · ${String(it.analyzed_at || '').slice(0, 10)}` }));
+      tags,
+      el('div', { class: 'muted', text: String(it.analyzed_at || '').slice(0, 10) }));
     ul.append(el('li', {}, a));
   }
   root.replaceChildren(ul);

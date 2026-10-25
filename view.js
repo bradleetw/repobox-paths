@@ -1,6 +1,7 @@
 import { ghRaw, ghRepoStatus, loadCfg, STEM_RE } from './lib/gh.mjs';
 import { pageState, stepView, sourceUrl, isPathsDoc } from './lib/paths.mjs';
 import { prepareSvg } from './lib/diagram.mjs';
+import { isUsageDoc, dangerNotes, snippetLink, indexFlags } from './lib/usage.mjs';
 import { $, el, showSetup, showMessage } from './ui.js';
 
 const root = $('root');
@@ -8,6 +9,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const FULL_NAME_RE = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
 const PREFIX = 'p';
 
+let panel = root;
 const st = { doc: null, svg: null, entry: 0, step: 0, list: null, buttons: [], hasDiagram: false };
 
 const svgEl = (tag, attrs) => {
@@ -113,10 +115,10 @@ function onDiagramClick(ev) {
   select(nums.find((i) => i > st.step) ?? nums[0]);
 }
 
-function render(doc, svgText) {
+function renderPaths(doc, svgText) {
   st.doc = doc;
   st.svg = svgText == null ? null : prepareSvg(svgText, PREFIX);
-  const kids = [el('h1', { text: doc.full_name })];
+  const kids = [];
   if (st.svg == null) {
     kids.push(el('p', { class: 'notice', text: svgText == null ? '找不到架構圖，只顯示步驟清單。' : '架構圖沒通過安全檢查，只顯示步驟清單。' }));
   }
@@ -136,26 +138,152 @@ function render(doc, svgText) {
   }
   layout.append(st.list);
   kids.push(bar, layout);
-  root.replaceChildren(...kids);
+  panel.replaceChildren(...kids);
   chooseEntry(0);
 }
 
+// ---- usage tab ----
+
+async function copyCode(btn, code, codeEl) {
+  try {
+    await navigator.clipboard.writeText(code);
+    btn.textContent = '已複製';
+  } catch {
+    const r = document.createRange();
+    r.selectNodeContents(codeEl);
+    const sel = getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+    btn.textContent = '已選取，請按 ⌘C／Ctrl+C';
+  }
+  setTimeout(() => { btn.textContent = '複製'; }, 2000);
+}
+
+function snippetNode(doc, sn, labels) {
+  const code = el('code');
+  code.textContent = sn.code;
+  const btn = el('button', { type: 'button', class: 'copy', text: '複製' });
+  btn.addEventListener('click', () => copyCode(btn, sn.code, code));
+  const head = el('div', { class: 'snip-head' },
+    el('span', { class: 'kind', text: sn.kind === 'config' && sn.file ? `存成 ${sn.file}` : (sn.kind === 'config' ? '設定' : '指令') }), btn);
+  const box = el('div', { class: `snip ${sn.kind}` }, head, el('pre', {}, code));
+  for (const note of dangerNotes(sn.code)) box.append(el('div', { class: 'danger', text: note }));
+  if (sn.for && sn.for.length) {
+    box.append(el('div', { class: 'only', text: `只適用 ${sn.for.map((id) => labels.get(id) || id).join('、')}` }));
+  }
+  const href = snippetLink(doc, sn);
+  const label = sn.path ? `${sn.path}:${sn.line}` : (() => { try { return new URL(sn.url).host; } catch { return '文件'; } })();
+  box.append(el('span', { class: 'src' }, href
+    ? el('a', { href, target: '_blank', rel: 'noopener noreferrer', text: label })
+    : el('span', { text: label })));
+  return box;
+}
+
+function stepNode(doc, s, i, labels) {
+  const body = el('div', {}, el('div', { text: s.text }));
+  if (s.unverified || s.snippets.length === 0) body.append(el('div', { class: 'unverified', text: '沒有可驗證的指令' }));
+  for (const sn of s.snippets) body.append(snippetNode(doc, sn, labels));
+  return el('li', { class: s.unverified ? 'ustep unv' : 'ustep' }, el('span', { class: 'num', text: String(i + 1) }), body);
+}
+
+function renderUsage(doc) {
+  st.doc = null;
+  const labels = new Map(doc.branches.map((b) => [b.id, b.label]));
+  const kids = [el('p', { class: 'notice warn', text: '指令都從 repo 或官方文件原樣抄出；文件本身若過期，照打也可能失敗。' })];
+  if (doc.branches.length) {
+    const grid = el('div', { class: 'branches', style: `--cols:${Math.min(doc.branches.length, 4)}` });
+    for (const b of doc.branches) {
+      const ol = el('ol', { class: 'usteps' });
+      b.steps.forEach((s, i) => ol.append(stepNode(doc, s, i, labels)));
+      grid.append(el('section', { class: 'branch', 'data-branch': b.id }, el('h2', { text: b.label }), ol));
+    }
+    kids.push(grid, el('div', { class: 'merge', 'aria-hidden': 'true', text: '↓ 裝好之後' }));
+  }
+  const ol = el('ol', { class: 'usteps' });
+  doc.first_use.steps.forEach((s, i) => ol.append(stepNode(doc, s, i, labels)));
+  kids.push(el('section', { class: 'firstuse' }, el('h2', { text: doc.first_use.goal }), ol));
+  panel.replaceChildren(...kids);
+}
+
+// ---- shell ----
+
+const cache = {};
+
+async function loadDoc(cfg, stem, tab) {
+  if (cache[tab]) return cache[tab];
+  const base = `local/${stem}`;
+  if (tab === 'usage') {
+    const r = await ghRaw(cfg, `${base}.usage.json`);
+    if (r.status < 200 || r.status >= 300) return { error: `讀取失敗（HTTP ${r.status}）。` };
+    let d; try { d = JSON.parse(r.text); } catch { d = null; }
+    if (!isUsageDoc(d)) return { error: 'usage.json 格式不對。' };
+    return (cache[tab] = { doc: d });
+  }
+  const r = await ghRaw(cfg, `${base}.paths.json`);
+  if (r.status < 200 || r.status >= 300) return { error: `讀取失敗（HTTP ${r.status}）。` };
+  let d; try { d = JSON.parse(r.text); } catch { d = null; }
+  if (!isPathsDoc(d) || d.entries.length === 0) return { error: 'paths.json 格式不對。' };
+  const s = await ghRaw(cfg, `${base}.svg`);
+  return (cache[tab] = { doc: d, svg: s.status >= 200 && s.status < 300 ? s.text : null });
+}
+
+function parseHash() {
+  let h;
+  try { h = decodeURIComponent(location.hash.slice(1)); } catch { return null; }
+  const [stem, tab = ''] = h.split('/');
+  if (!STEM_RE.test(stem) || (tab !== '' && tab !== 'usage')) return null;
+  return { stem, tab: tab === 'usage' ? 'usage' : 'paths' };
+}
+
 async function main() {
-  const stem = decodeURIComponent(location.hash.slice(1));
-  if (!STEM_RE.test(stem)) return showMessage(root, '網址裡沒有有效的 repo。');
+  const h = parseHash();
+  if (!h) return showMessage(root, '網址裡沒有有效的 repo。');
+  const { stem } = h;
   const cfg = loadCfg();
   if (!cfg || !cfg.token) return showSetup(root, main);
-  const p = await ghRaw(cfg, `local/${stem}.paths.json`);
-  const repoStatus = p.status === 404 ? await ghRepoStatus(cfg) : 0;
-  const state = pageState(cfg, p.status, repoStatus);
+  const idx = await ghRaw(cfg, 'local/index.json');
+  const repoStatus = idx.status === 404 ? await ghRepoStatus(cfg) : 0;
+  const state = pageState(cfg, idx.status, repoStatus);
   if (state === 'auth') return showMessage(root, 'Token 無效或看不到收藏庫。', true);
-  if (state === 'empty') return showMessage(root, '這個 repo 沒有請求路徑資料。');
-  if (state === 'error') return showMessage(root, `讀取失敗（HTTP ${p.status}）。`);
-  let doc;
-  try { doc = JSON.parse(p.text); } catch { doc = null; }
-  if (!isPathsDoc(doc) || doc.entries.length === 0) return showMessage(root, 'paths.json 格式不對。');
-  const s = await ghRaw(cfg, `local/${stem}.svg`);
-  render(doc, s.status >= 200 && s.status < 300 ? s.text : null);
+  if (state === 'empty') return showMessage(root, '這個 repo 沒有分析資料。');
+  if (state === 'error') return showMessage(root, `讀取失敗（HTTP ${idx.status}）。`);
+  let items;
+  try { items = JSON.parse(idx.text).items; } catch { items = null; }
+  if (!Array.isArray(items)) return showMessage(root, 'index.json 格式不對。');
+  const item = items.find((it) => it && it.stem === stem);
+  if (!item) return showMessage(root, '收藏庫的索引裡沒有這個 repo。');
+  const flags = indexFlags(item);
+  const avail = { paths: flags.paths > 0, usage: flags.usage };
+  if (!avail.paths && !avail.usage) return showMessage(root, '這個 repo 沒有請求路徑也沒有使用流程資料。');
+
+  const TABS = [['paths', '請求路徑', '這次分析沒有請求路徑'], ['usage', '使用流程', '這次分析沒有使用流程']];
+  const tabBtns = {};
+  const bar = el('div', { class: 'tabs', role: 'tablist' });
+  for (const [key, label, none] of TABS) {
+    const b = el('button', { type: 'button', role: 'tab', 'data-tab': key, 'aria-selected': 'false' }, document.createTextNode(label));
+    if (avail[key]) b.addEventListener('click', () => show(key, true));
+    else { b.disabled = true; b.append(el('small', { text: none })); }
+    tabBtns[key] = b;
+    bar.append(b);
+  }
+  panel = el('div', { class: 'panel', role: 'tabpanel' });
+  const fullName = String(item.full_name || stem);
+  root.replaceChildren(el('h1', { text: fullName }), bar, panel);
+
+  let seq = 0;
+  async function show(tab, record) {
+    const mine = ++seq;
+    for (const k of Object.keys(tabBtns)) tabBtns[k].setAttribute('aria-selected', String(k === tab));
+    if (record) history.replaceState(null, '', tab === 'usage' ? `#${stem}/usage` : `#${stem}`);
+    panel.replaceChildren(el('p', { class: 'muted', text: '讀取中…' }));
+    st.doc = null;
+    const r = await loadDoc(cfg, stem, tab);
+    if (mine !== seq) return;
+    if (r.error) return showMessage(panel, r.error);
+    if (tab === 'usage') renderUsage(r.doc); else renderPaths(r.doc, r.svg);
+  }
+  const first = avail[h.tab] ? h.tab : (avail.paths ? 'paths' : 'usage');
+  await show(first, first !== h.tab);
 }
 
 document.addEventListener('keydown', (ev) => {

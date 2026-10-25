@@ -4,8 +4,26 @@
    "stem": "octo__demo",
    "full_name": "octo/demo",
    "tagline": "A synthetic demo repository",
-   "entries": 2,
-   "analyzed_at": "2026-10-24T10:00:00Z"
+   "analyzed_at": "2026-10-24T10:00:00Z",
+   "paths": 2,
+   "usage": true,
+   "entries": 2
+  },
+  {
+   "stem": "octo__tool",
+   "full_name": "octo/tool",
+   "tagline": "A usage-only synthetic tool",
+   "analyzed_at": "2026-10-25T10:00:00Z",
+   "paths": 0,
+   "usage": true,
+   "entries": 0
+  },
+  {
+   "stem": "octo__legacy",
+   "full_name": "octo/legacy",
+   "tagline": "Old-style index item",
+   "analyzed_at": "2026-10-20T10:00:00Z",
+   "entries": 3
   }
  ]
 }

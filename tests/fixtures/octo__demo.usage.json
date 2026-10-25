@@ -1,0 +1,111 @@
+{
+ "full_name": "octo/demo",
+ "sha": "0123456789abcdef0123456789abcdef01234567",
+ "analyzed_at": "2026-10-24T10:00:00Z",
+ "model": "test",
+ "stats": {},
+ "branches": [
+  {
+   "id": "binary",
+   "label": "單一執行檔",
+   "steps": [
+    {
+     "text": "Download the release archive and unpack it.",
+     "snippets": [
+      {
+       "kind": "command",
+       "code": "curl -sL https://example.invalid/octo/install.sh | bash",
+       "path": "README.md",
+       "line": 12
+      }
+     ]
+    },
+    {
+     "text": "Save a minimal config next to the binary.",
+     "snippets": [
+      {
+       "kind": "config",
+       "file": "demo.yaml",
+       "code": "server:\n  port: 8080\n  token: <your-token>\n",
+       "path": "docs/config.md",
+       "line": 5
+      }
+     ]
+    },
+    {
+     "text": "Start the server.",
+     "snippets": [
+      {
+       "kind": "command",
+       "code": "./demo serve --config demo.yaml",
+       "path": "README.md",
+       "line": 30
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "docker",
+   "label": "Docker",
+   "steps": [
+    {
+     "text": "Pull the image with elevated rights.",
+     "snippets": [
+      {
+       "kind": "command",
+       "code": "sudo docker pull octo/demo:latest",
+       "url": "https://docs.example.invalid/demo/docker"
+      }
+     ]
+    },
+    {
+     "text": "Mount the config and run it.",
+     "snippets": [
+      {
+       "kind": "command",
+       "code": "docker run -p 8080:8080 \\\n  -v $PWD/demo.yaml:/etc/demo.yaml \\\n  octo/demo:latest",
+       "path": "docs/docker.md",
+       "line": 9
+      }
+     ]
+    },
+    {
+     "text": "Tune networking for your cluster.",
+     "unverified": true,
+     "snippets": []
+    }
+   ]
+  }
+ ],
+ "first_use": {
+  "goal": "送出第一個請求",
+  "steps": [
+   {
+    "text": "Call the health endpoint.",
+    "snippets": [
+     {
+      "kind": "command",
+      "code": "curl http://localhost:8080/healthz",
+      "path": "README.md",
+      "line": 44
+     }
+    ]
+   },
+   {
+    "text": "Log in with the token.",
+    "snippets": [
+     {
+      "kind": "command",
+      "code": "./demo login --token $TOKEN",
+      "path": "README.md",
+      "line": 50,
+      "for": [
+       "binary"
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

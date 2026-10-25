@@ -43,3 +43,28 @@ li.cur .num{background:var(--accent);color:#fff}
 .src{display:block;font-size:.78rem;color:var(--mute);word-break:break-all}
 .src a{color:var(--mute)}
 @media (max-width:720px){.layout{grid-template-columns:minmax(0,1fr)}}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.pill{font-size:.75rem;padding:1px 8px;border:1px solid var(--line);border-radius:999px;color:var(--mute);background:var(--paper)}
+.tabs{display:flex;gap:8px;margin:8px 0 16px;border-bottom:1px solid var(--line)}
+.tabs button{padding:8px 14px;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;background:var(--card);color:var(--ink);margin-bottom:-1px}
+.tabs button[aria-selected=true]{border-color:var(--accent);box-shadow:inset 0 3px 0 var(--accent);font-weight:600}
+.tabs button:disabled{cursor:not-allowed;color:var(--mute);background:var(--paper)}
+.tabs button small{display:block;font-size:.72rem;font-weight:400}
+.notice.warn{margin-top:0}
+.branches{display:grid;grid-template-columns:repeat(var(--cols,1),minmax(0,1fr));gap:16px;align-items:start}
+.branch h2,.firstuse h2{font-size:1.1rem;margin:0 0 8px}
+.branch{min-width:0}
+ol.usteps{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+ol.usteps li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+li.ustep.unv{border-style:dashed}
+.unverified{display:inline-block;margin-top:4px;font-size:.8rem;color:var(--mute);border:1px dashed var(--line);border-radius:4px;padding:0 6px}
+.snip{margin-top:8px}
+.snip-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.78rem;color:var(--mute)}
+.snip .copy{padding:2px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-size:.78rem}
+.snip pre{margin:4px 0 0;padding:8px 10px;overflow:auto;background:#1e1e2e;color:#cdd6f4;border-radius:6px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+.snip pre code{font:inherit;white-space:pre}
+.danger{margin-top:4px;font-size:.8rem;color:#8a2a0e;background:#fdeee8;border-left:3px solid var(--accent);padding:2px 8px;border-radius:0 4px 4px 0}
+.only{margin-top:4px;font-size:.78rem;color:var(--accent)}
+.merge{text-align:center;color:var(--mute);margin:16px 0 8px;font-size:.9rem;position:relative}
+.merge:before{content:"";display:block;width:2px;height:14px;background:var(--line);margin:0 auto 4px}
+@media (max-width:720px){.branches{grid-template-columns:minmax(0,1fr)}}

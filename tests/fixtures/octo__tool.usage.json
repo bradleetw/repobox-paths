@@ -1,0 +1,42 @@
+{
+ "full_name": "octo/tool",
+ "sha": "0123456789abcdef0123456789abcdef01234567",
+ "analyzed_at": "2026-10-24T10:00:00Z",
+ "model": "test",
+ "stats": {},
+ "branches": [
+  {
+   "id": "pip",
+   "label": "pip",
+   "steps": [
+    {
+     "text": "Install the package.",
+     "snippets": [
+      {
+       "kind": "command",
+       "code": "pip install octo-tool",
+       "path": "README.md",
+       "line": 4
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "first_use": {
+  "goal": "跑第一個指令",
+  "steps": [
+   {
+    "text": "Run it.",
+    "snippets": [
+     {
+      "kind": "command",
+      "code": "octo-tool --help",
+      "path": "README.md",
+      "line": 8
+     }
+    ]
+   }
+  ]
+ }
+}
