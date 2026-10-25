@@ -1,0 +1,113 @@
+{
+ "full_name": "octo/demo",
+ "sha": "0123456789abcdef0123456789abcdef01234567",
+ "analyzed_at": "2026-10-24T10:00:00Z",
+ "model": "test",
+ "stats": {},
+ "entries": [
+  {
+   "id": "login",
+   "label": "Login",
+   "trigger": "User submits the login form",
+   "steps": [
+    {
+     "node": "n-web",
+     "text": "The form posts credentials to the API.",
+     "source": {
+      "path": "web/login.ts",
+      "symbol": "submit",
+      "line": 10
+     }
+    },
+    {
+     "node": "n-api",
+     "text": "The API routes the request to the auth module.",
+     "source": {
+      "path": "api/routes.py",
+      "symbol": "login",
+      "line": 25
+     }
+    },
+    {
+     "node": "n-auth",
+     "text": "Auth checks the password and issues a token.",
+     "source": {
+      "path": "auth/service.py",
+      "symbol": "verify",
+      "line": 40
+     }
+    },
+    {
+     "node": "n-db",
+     "text": "The user record is read from the database.",
+     "source": {
+      "path": "db/users.py",
+      "symbol": "get_user",
+      "line": 12
+     }
+    },
+    {
+     "node": "n-api",
+     "text": "The API returns the token to the client.",
+     "source": {
+      "path": "api/routes.py",
+      "symbol": "respond",
+      "line": 31
+     }
+    }
+   ]
+  },
+  {
+   "id": "job",
+   "label": "Background job",
+   "trigger": "User starts an export",
+   "steps": [
+    {
+     "node": "n-web",
+     "text": "The UI asks for an export.",
+     "source": {
+      "path": "web/export.ts",
+      "symbol": "start",
+      "line": 8
+     }
+    },
+    {
+     "node": "n-api",
+     "text": "The API validates and enqueues a job.",
+     "source": {
+      "path": "api/export.py",
+      "symbol": "create",
+      "line": 19
+     }
+    },
+    {
+     "node": "n-queue",
+     "text": "The queue stores the job.",
+     "source": {
+      "path": "queue/broker.py",
+      "symbol": "push",
+      "line": 52
+     }
+    },
+    {
+     "node": "n-worker",
+     "text": "A worker picks the job up.",
+     "source": {
+      "path": "worker/main.py",
+      "symbol": "run",
+      "line": 33
+     }
+    },
+    {
+     "node": "n-db",
+     "text": "The result is written to the database.",
+     "source": {
+      "path": "db/results.py",
+      "symbol": "save",
+      "line": 70
+     }
+    }
+   ]
+  }
+ ]
+}

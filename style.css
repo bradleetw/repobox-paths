@@ -1,0 +1,45 @@
+:root{--paper:#faf8f4;--ink:#1a1a1a;--mute:#6b665e;--line:#d9d3c7;--accent:#bf4520;--card:#fffdf9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Noto Sans TC",sans-serif}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.4rem;margin:.2em 0 .6em}
+a{color:var(--accent)}
+.muted{color:var(--mute);font-size:.9rem}
+.notice{border:1px solid var(--accent);border-left-width:4px;background:var(--card);padding:10px 14px;margin:12px 0;border-radius:6px}
+form.setup{display:grid;gap:12px;max-width:460px}
+form.setup label{display:grid;gap:4px;font-size:.9rem;color:var(--mute)}
+input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+button{font:inherit;cursor:pointer}
+form.setup button{padding:9px 14px;border:0;border-radius:6px;background:var(--accent);color:#fff}
+.cards{list-style:none;margin:0;padding:0;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.cards a.card{display:block;height:100%;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit;text-decoration:none}
+.cards a.card:hover,.cards a.card:focus-visible{border-color:var(--accent)}
+.card .name{font-weight:600}
+.card .tag{margin:4px 0 8px}
+.entries{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}
+.entries button{text-align:left;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.entries button small{display:block;color:var(--mute);font-size:.8rem}
+.entries button[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:20px;align-items:start}
+.layout.nodia{grid-template-columns:minmax(0,720px)}
+.fig{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:8px}
+.fig svg{display:block;width:100%;height:auto}
+.fig .node,.fig .edge,.fig .label{transition:opacity .15s}
+.fig .node.dim,.fig .edge.dim,.fig .label.dim{opacity:.28}
+.fig .node.on>rect{stroke:var(--accent)}
+.fig .node.cur>rect{stroke:var(--accent);stroke-width:3.5}
+.fig .node.on{cursor:pointer}
+.fig .edge.on{stroke:var(--accent);stroke-width:2.5;opacity:1}
+.fig .badge{cursor:pointer}
+.fig .badge circle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5}
+.fig .badge text{fill:var(--accent);font:600 13px sans-serif;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.fig .badge.cur circle{fill:var(--accent)}
+.fig .badge.cur text{fill:#fff}
+ol.steps{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+ol.steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer}
+ol.steps li.cur{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.num{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center;font-size:.8rem;font-weight:600}
+li.cur .num{background:var(--accent);color:#fff}
+.src{display:block;font-size:.78rem;color:var(--mute);word-break:break-all}
+.src a{color:var(--mute)}
+@media (max-width:720px){.layout{grid-template-columns:minmax(0,1fr)}}
